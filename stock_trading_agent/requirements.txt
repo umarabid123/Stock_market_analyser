@@ -9,3 +9,5 @@ alpaca-py
 polygon-api-client
 finnhub-python
 langgraph
+plotly
+streamlit-autorefresh

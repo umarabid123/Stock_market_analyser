@@ -10,9 +10,11 @@ def add_indicators(data: pd.DataFrame) -> pd.DataFrame:
     frame = data.copy()
     frame["SMA_20"] = frame["Close"].rolling(20, min_periods=5).mean()
     frame["SMA_50"] = frame["Close"].rolling(50, min_periods=10).mean()
+    frame["EMA_20"] = frame["Close"].ewm(span=20, adjust=False).mean()
     frame["RSI_14"] = _rsi(frame["Close"], period=14)
     frame["ATR_14"] = _atr(frame, period=14)
     frame["Momentum_5"] = frame["Close"].pct_change(5)
+    frame["Volume_SMA_20"] = frame["Volume"].rolling(20, min_periods=5).mean()
     return frame
 
 
@@ -32,3 +34,18 @@ def _atr(frame: pd.DataFrame, period: int = 14) -> pd.Series:
     low_close = (frame["Low"] - frame["Close"].shift(1)).abs()
     tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
     return tr.rolling(period, min_periods=period).mean()
+
+
+def get_volume_strength(df: pd.DataFrame) -> str:
+    """Return 'STRONG' if latest volume > Volume_SMA_20 else 'WEAK'."""
+    if "Volume_SMA_20" not in df.columns:
+        return "WEAK"
+    latest = df.iloc[-1]
+    vol = latest.get("Volume", 0)
+    vma = latest.get("Volume_SMA_20", 0)
+    try:
+        if vol > vma and vma > 0:
+            return "STRONG"
+    except Exception:
+        pass
+    return "WEAK"

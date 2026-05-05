@@ -21,23 +21,35 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     provider = MarketDataProvider(settings)
-    data = provider.get_ohlcv(args.symbol, args.period, args.interval)
-
-    if data.empty:
-        print("No market data was returned. Check symbol, network, or API keys.")
-        return 1
-
+    # Use multi-timeframe fetch for stronger decision support
+    multi = provider.get_multi_timeframe_data(args.symbol)
     engine = SignalEngine(settings)
-    result = engine.generate_signal(args.symbol, data)
+    result = engine.generate_signal(args.symbol, multi)
 
-    print(f"Symbol: {result['symbol']}")
-    print(f"Latest Price: {result['latest_price']:.2f}")
-    print(f"Signal: {result['signal']}")
-    print(f"Confidence: {result['confidence']:.2f}")
-    print(f"Reason: {result['reason']}")
-    print(f"Stop Loss: {result['stop_loss']:.2f}")
-    print(f"Take Profit: {result['take_profit']:.2f}")
-    print(f"Risk Warning: {result['risk_warning']}")
+    def fmt(v):
+        if v is None:
+            return "-"
+        try:
+            return f"{v:.2f}"
+        except Exception:
+            return str(v)
+
+    print(f"Symbol: {result.get('symbol')}")
+    print(f"Latest Price: {fmt(result.get('latest_price'))}")
+    print(f"Main Signal: {result.get('signal')}")
+    print(f"Confidence: {result.get('confidence'):.2f}")
+    print(f"Prediction Direction: {result.get('prediction_direction')}")
+    print(f"Trend 5m: {result.get('trend_5m')}")
+    print(f"Trend 15m: {result.get('trend_15m')}")
+    print(f"Trend 1h: {result.get('trend_1h')}")
+    print(f"Trend 1d: {result.get('trend_1d')}")
+    print(f"Volume Strength: {result.get('volume_strength')}")
+    news = result.get('news_sentiment') or {}
+    print(f"News Sentiment: {news.get('sentiment')} ({news.get('score')}) - {news.get('reason')}")
+    print(f"Reason: {result.get('reason')}")
+    print(f"Stop Loss: {fmt(result.get('stop_loss'))}")
+    print(f"Take Profit: {fmt(result.get('take_profit'))}")
+    print(f"Risk Warning: {result.get('risk_warning')}")
     return 0
 
 

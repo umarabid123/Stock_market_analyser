@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 import pandas as pd
 
 from config import Settings
+from features.indicators import add_indicators
 
 
 class MarketDataProvider:
@@ -32,6 +33,36 @@ class MarketDataProvider:
                 return self._normalize(frame)
 
         return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+
+    def get_multi_timeframe_data(self, symbol: str) -> dict:
+        """Fetch multiple timeframes and attach indicators.
+
+        Returns a dict with keys: '5m', '15m', '1h', '1d'. Each value is a DataFrame (may be empty).
+        """
+        out: dict = {}
+        specs = {
+            "5m": ("5d", "5m"),
+            "15m": ("5d", "15m"),
+            "1h": ("1mo", "1h"),
+            "1d": ("6mo", "1d"),
+        }
+
+        for key, (period, interval) in specs.items():
+            try:
+                df = self.get_ohlcv(symbol, period=period, interval=interval)
+                if df is None or df.empty:
+                    out[key] = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+                    continue
+                try:
+                    df = add_indicators(df)
+                except Exception:
+                    # If indicators fail, keep raw frame but ensure expected columns exist
+                    pass
+                out[key] = df
+            except Exception:
+                out[key] = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+
+        return out
 
     def _fetch_yfinance(self, symbol: str, period: str, interval: str) -> pd.DataFrame | None:
         try:

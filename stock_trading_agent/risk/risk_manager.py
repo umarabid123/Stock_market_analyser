@@ -10,22 +10,22 @@ class RiskManager:
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
+        self.risk_reward_ratio = 2.0
+        self.suggested_position_size_percent = 2
 
-    def build_levels(self, signal: str, latest_price: float, atr_value: float) -> tuple[float, float, str]:
-        atr = atr_value if atr_value and atr_value > 0 else latest_price * 0.01
+    def build_levels(self, signal: str, latest_price: float, atr_value: float) -> tuple[float | None, float | None, str]:
+        atr = atr_value if atr_value and atr_value > 0 else (latest_price * 0.01 if latest_price else 0.0)
 
         if signal == "BUY":
             stop_loss = latest_price - (1.5 * atr)
-            take_profit = latest_price + (2.0 * atr)
+            take_profit = latest_price + (3.0 * atr)
         elif signal == "SELL":
             stop_loss = latest_price + (1.5 * atr)
-            take_profit = latest_price - (2.0 * atr)
+            take_profit = latest_price - (3.0 * atr)
         else:
-            stop_loss = latest_price - (1.0 * atr)
-            take_profit = latest_price + (1.0 * atr)
+            stop_loss = None
+            take_profit = None
 
-        warning = "Paper trading mode is ON. Do not treat this as guaranteed profit."
-        if not self.settings.paper_trading_only:
-            warning = "Live trading enabled. Validate risk carefully; no guaranteed profit."
+        warning = "This is a paper-trading decision-support signal only. It is not financial advice."
 
-        return float(stop_loss), float(take_profit), warning
+        return (None if stop_loss is None else float(stop_loss)), (None if take_profit is None else float(take_profit)), warning
