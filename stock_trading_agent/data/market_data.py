@@ -166,23 +166,44 @@ class MarketDataProvider:
 
     @staticmethod
     def _normalize(frame: pd.DataFrame) -> pd.DataFrame:
-        columns = {c.lower(): c for c in frame.columns}
-        lookup = {
-            "Open": ["Open", "open", columns.get("open")],
-            "High": ["High", "high", columns.get("high")],
-            "Low": ["Low", "low", columns.get("low")],
-            "Close": ["Close", "close", columns.get("close")],
-            "Volume": ["Volume", "volume", columns.get("volume")],
+        # yfinance may return MultiIndex columns, e.g. ('Open', 'AAPL').
+        normalized_names: dict[object, str] = {}
+        for col in frame.columns:
+            if isinstance(col, tuple):
+                parts = [str(part) for part in col if part is not None and str(part).strip()]
+                flat = "_".join(parts).lower()
+            else:
+                flat = str(col).lower()
+            normalized_names[col] = flat
+
+        lookup: dict[str, list[str]] = {
+            "Open": ["open"],
+            "High": ["high"],
+            "Low": ["low"],
+            "Close": ["close"],
+            "Volume": ["volume"],
         }
 
         clean = pd.DataFrame(index=frame.index)
         for target, options in lookup.items():
             for option in options:
-                if option and option in frame.columns:
-                    clean[target] = frame[option]
+                match = next(
+                    (
+                        original
+                        for original, normalized in normalized_names.items()
+                        if normalized == option or normalized.startswith(f"{option}_")
+                    ),
+                    None,
+                )
+                if match is not None:
+                    clean[target] = frame[match]
                     break
 
-        clean = clean[["Open", "High", "Low", "Close", "Volume"]].dropna()
+        required = ["Open", "High", "Low", "Close", "Volume"]
+        if not all(col in clean.columns for col in required):
+            return pd.DataFrame(columns=required)
+
+        clean = clean[required].dropna()
         clean = clean.sort_index()
         return clean
 
