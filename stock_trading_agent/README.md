@@ -71,5 +71,29 @@ Expected output fields:
 From inside `stock_trading_agent`:
 
 ```bash
-streamlit run dashboard/streamlit_app.py
+python -m streamlit run dashboard/streamlit_app.py
 ```
+
+If you see a launcher error like `Unable to create process`, use the `python -m streamlit` form above instead of the `streamlit` command.
+
+### How the dashboard works
+
+- Use the left panel to load a preset or read the input examples.
+- Enter a stock symbol such as `AAPL`, `MSFT`, or `TSLA`.
+- Choose a lookback period like `5d`, `1mo`, or `3mo`.
+- Choose an interval like `5m`, `15m`, `1h`, or `1d`.
+- Click **Analyze Market**.
+- The app will then show:
+	- Latest price
+	- Signal: `BUY`, `SELL`, or `HOLD`
+	- Confidence score
+	- Human-readable reason
+	- Stop loss and take profit
+
+### What the result means
+
+- `BUY` means the internal indicators are leaning bullish.
+- `SELL` means the internal indicators are leaning bearish.
+- `HOLD` means the signal is mixed or not strong enough.
+- Confidence is a simple score from `0.00` to `1.00`.
+- The app is for learning and paper-trading support only, not guaranteed profit.

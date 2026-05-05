@@ -1,1 +1,10 @@
 .env
+# add important files to ignore
+node_modules/
+dist/
+build/
+coverage/
+# add log files to ignore
+*.log
+pycache__/
+*.pyc
