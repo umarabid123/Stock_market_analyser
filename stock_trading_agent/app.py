@@ -24,7 +24,7 @@ def main() -> int:
     # Use multi-timeframe fetch for stronger decision support
     multi = provider.get_multi_timeframe_data(args.symbol)
     engine = SignalEngine(settings)
-    result = engine.generate_signal(args.symbol, multi)
+    result = engine.analyze_market(args.symbol, multi)
 
     def fmt(v):
         if v is None:

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 
 from config import settings
 from data.market_data import MarketDataProvider
+from data.live_stream import LiveMarketStreamer
 from strategy.signal_engine import SignalEngine
 from features.indicators import add_indicators
 try:
@@ -41,6 +43,12 @@ def _signal_summary(signal: str) -> str:
         "HOLD": "Mixed or weak conditions, so the engine is waiting.",
     }
     return mapping.get(signal.upper(), "No summary available.")
+
+
+def _get_live_streamer() -> LiveMarketStreamer:
+    if "live_streamer" not in st.session_state:
+        st.session_state["live_streamer"] = LiveMarketStreamer()
+    return st.session_state["live_streamer"]
 
 
 def main() -> None:
@@ -91,6 +99,36 @@ def main() -> None:
             help="Smaller intervals show more detail; larger ones are smoother.",
         )
 
+    live_enabled = st.checkbox("Enable Live Stream", value=st.session_state.get("live_enabled", False), key="live_enabled")
+    live_placeholder = st.empty()
+    streamer = _get_live_streamer()
+
+    refresh_seconds = st.number_input("Refresh seconds", min_value=5, value=60, step=5, key="refresh_seconds")
+    auto = st.checkbox("Auto refresh", value=st.session_state.get("auto_refresh_enabled", False), key="auto_refresh_enabled")
+    if auto and st_autorefresh is not None:
+        st_autorefresh(interval=int(refresh_seconds) * 1000, key="auto_refresh_tick")
+
+    if live_enabled:
+        live_error = streamer.start_stream(symbol, lambda bar: None)
+        if live_error:
+            st.warning(live_error)
+
+        latest_live = streamer.latest_bar
+        if latest_live and latest_live.get("close") is not None:
+            try:
+                latest_price = float(latest_live.get("close"))
+                live_placeholder.metric("Latest Live Price", f"{latest_price:.2f}")
+            except Exception:
+                live_placeholder.metric("Latest Live Price", str(latest_live.get("close")))
+            st.caption(
+                f"Live bar time: {latest_live.get('timestamp')} | Volume: {latest_live.get('volume')}"
+            )
+        else:
+            live_placeholder.info("Waiting for live Alpaca bar updates...")
+    else:
+        streamer.stop_stream()
+        live_placeholder.info("Live stream disabled. Historical REST/yfinance mode is active.")
+
     analyze = st.button("Analyze Market", type="primary", use_container_width=True)
 
     st.info("Tip: If you are not sure what to enter, use the quick preset buttons in the left panel.")
@@ -105,17 +143,11 @@ def main() -> None:
         return
 
     provider = MarketDataProvider(settings)
-    # Auto-refresh handling
-    auto = st.checkbox("Auto refresh", value=False)
-    refresh_seconds = st.number_input("Refresh seconds", min_value=5, value=60, step=5)
-    if auto and st_autorefresh is not None:
-        st_autorefresh(interval=refresh_seconds * 1000, key="auto_refresh")
-
     with st.spinner("Loading multi-timeframe data and calculating signal..."):
         multi = provider.get_multi_timeframe_data(symbol)
 
     engine = SignalEngine(settings)
-    result = engine.generate_signal(symbol, multi)
+    result = engine.analyze_market(symbol, multi)
 
     # For plotting, prefer the interval chosen by the user if available in multi
     data = None

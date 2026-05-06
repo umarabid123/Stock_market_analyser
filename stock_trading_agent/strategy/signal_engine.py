@@ -53,32 +53,56 @@ class SignalEngine:
         except Exception:
             return {"signal": "HOLD", "confidence": 0.0, "reason": "Prediction error"}
 
-    def generate_signal(self, symbol: str, data: pd.DataFrame | Dict[str, pd.DataFrame]) -> dict:
+    @staticmethod
+    def _get_frame(tf: Dict[str, pd.DataFrame], key: str) -> pd.DataFrame | None:
+        frame = tf.get(key)
+        if frame is not None and not frame.empty:
+            return frame
+        return None
+
+    def _select_entry_frame(self, tf: Dict[str, pd.DataFrame]) -> pd.DataFrame | None:
+        for candidate_key in ("15m", "5m", "1h"):
+            frame = self._get_frame(tf, candidate_key)
+            if frame is not None:
+                return frame
+        return None
+
+    def analyze_market(self, symbol: str, data: pd.DataFrame | Dict[str, pd.DataFrame]) -> dict:
         """Generate a multi-factor signal. 'data' may be a dict of timeframes from MarketDataProvider.get_multi_timeframe_data.
 
         If a single DataFrame is provided, fall back to the legacy behavior.
         """
-        # If single-frame input, keep legacy flow but use new risk manager
-        if isinstance(data, pd.DataFrame):
+        # If the input is not a dict of timeframes, keep the legacy single-frame flow.
+        if not isinstance(data, dict):
             return self._generate_single_frame(symbol, data)
 
         # Expecting dict with keys '5m','15m','1h','1d'
-        tf = data
+        tf: Dict[str, pd.DataFrame] = data
         trends = {k: detect_trend(v) for k, v in tf.items()}
 
         # pick entry frame for prediction: prefer 15m then 5m then 1h
-        entry_df = None
-        for candidate_key in ("15m", "5m", "1h"):
-            candidate_df = tf.get(candidate_key)
-            if candidate_df is not None and not candidate_df.empty:
-                entry_df = candidate_df
-                break
+        entry_df = self._select_entry_frame(tf)
 
-        prediction = (
-            self._safe_predict(entry_df)
-            if entry_df is not None and not entry_df.empty
-            else {"signal": "HOLD", "confidence": 0.0, "reason": "No entry data"}
-        )
+        if entry_df is None:
+            return {
+                "symbol": symbol,
+                "latest_price": 0.0,
+                "signal": "HOLD",
+                "confidence": 0.0,
+                "prediction_direction": "HOLD",
+                "trend_5m": trends.get("5m", "SIDEWAYS"),
+                "trend_15m": trends.get("15m", "SIDEWAYS"),
+                "trend_1h": trends.get("1h", "SIDEWAYS"),
+                "trend_1d": trends.get("1d", "SIDEWAYS"),
+                "volume_strength": "WEAK",
+                "news_sentiment": {"sentiment": "UNAVAILABLE", "score": 0, "reason": "No entry data"},
+                "reason": "No entry data",
+                "stop_loss": None,
+                "take_profit": None,
+                "risk_warning": "This is a paper-trading decision-support signal only. It is not financial advice.",
+            }
+
+        prediction = self._safe_predict(entry_df)
 
         # Multi-timeframe confirmation
         tf_1h = trends.get("1h", "SIDEWAYS")
@@ -98,8 +122,8 @@ class SignalEngine:
         confidence = float(prediction.get("confidence", 0.0))
 
         # Volume strength from entry timeframe (prefer 5m)
-        vol_df = tf.get("5m")
-        if vol_df is None or vol_df.empty:
+        vol_df = self._get_frame(tf, "5m")
+        if vol_df is None:
             vol_df = entry_df
         vol_strength = "WEAK"
         try:
