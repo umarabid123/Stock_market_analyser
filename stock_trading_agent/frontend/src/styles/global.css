@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 12px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Signal colors */
+.signal-buy {
+  @apply text-bullish;
+}
+
+.signal-sell {
+  @apply text-bearish;
+}
+
+.signal-hold {
+  @apply text-neutral;
+}
+
+.signal-wait {
+  @apply text-yellow-500;
+}
+
+/* Animations */
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: rgba(0, 255, 136, 0.3);
+  }
+  50% {
+    border-color: rgba(0, 255, 136, 0.8);
+  }
+}
+
+.animate-pulse-border {
+  animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
