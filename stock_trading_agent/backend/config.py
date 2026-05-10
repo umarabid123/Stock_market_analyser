@@ -41,6 +41,8 @@ class Settings:
 
     alphavantage_api_key: str = os.getenv("ALPHAVANTAGE_API_KEY", "").strip()
     finnhub_api_key: str = os.getenv("FINNHUB_API_KEY", "").strip()
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "").strip()
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-1.5-mini").strip()
 
     # Telegram alerts
     telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()

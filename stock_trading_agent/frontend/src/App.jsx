@@ -24,14 +24,20 @@ function App() {
     setError(null)
     try {
       const result = await analyzeMarket(selectedPair, selectedTimeframe, selectedLookback)
-      setAnalysisResult(result)
+      const safeResult = result ?? null
+      setAnalysisResult(safeResult)
+      console.log('analysis', safeResult)
 
       // Fetch candles
       const candleData = await getCandles(selectedPair, selectedTimeframe, selectedLookback)
-      setCandles(candleData)
+      const safeCandles = Array.isArray(candleData) ? candleData : []
+      setCandles(safeCandles)
+      console.log('candles', safeCandles)
     } catch (err) {
-      setError(err.message || 'Failed to analyze market')
+      setError(err?.message || 'Failed to analyze market')
       console.error('Analysis error:', err)
+      setCandles([])
+      setAnalysisResult(null)
     } finally {
       setLoading(false)
     }

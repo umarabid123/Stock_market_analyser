@@ -30,8 +30,8 @@ function Navbar({ selectedPair, analysisResult }) {
           <div className="text-center">
             <p className="text-xs text-gray-400 uppercase tracking-wide">Market Status</p>
             <p className="text-lg font-semibold">
-              <span className={analysisResult.latest_price > 0 ? 'text-bullish' : 'text-bearish'}>
-                {analysisResult.latest_price.toFixed(5)}
+              <span className={(analysisResult?.latest_price ?? 0) > 0 ? 'text-bullish' : 'text-bearish'}>
+                {(analysisResult?.latest_price ?? 0).toFixed(5)}
               </span>
             </p>
           </div>

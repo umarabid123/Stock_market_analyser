@@ -1,6 +1,6 @@
 import React from 'react'
 import { MessageCircle, AlertCircle } from 'lucide-react'
-import { getSignalColor, getSignalBgColor } from '../utils/formatters'
+import { getSignalColor, getSignalBgColor, formatConfidence } from '../utils/formatters'
 
 function SignalPanel({ result }) {
   return (
@@ -21,7 +21,7 @@ function SignalPanel({ result }) {
             <p className="text-sm text-gray-300">
               <span className="font-semibold">Confidence:</span>{' '}
               <span className="text-bullish">
-                {(result.confidence * 100).toFixed(1)}%
+                {formatConfidence(result.confidence)}
               </span>
             </p>
             <p className="text-sm text-gray-300">

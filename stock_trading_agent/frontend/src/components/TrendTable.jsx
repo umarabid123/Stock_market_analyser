@@ -4,12 +4,13 @@ import { getTrendColor } from '../utils/formatters'
 
 function TrendTable({ result }) {
   const trends = [
-    { name: '5 Min', value: result.trends['5m'] },
-    { name: '15 Min', value: result.trends['15m'] },
-    { name: '1 Hour', value: result.trends['1h'] },
-    { name: '4 Hour', value: result.trends['4h'] },
-    { name: '1 Day', value: result.trends['1d'] },
+    { name: '5 Min', value: result.trends?.['5m'] || 'NEUTRAL' },
+    { name: '15 Min', value: result.trends?.['15m'] || 'NEUTRAL' },
+    { name: '1 Hour', value: result.trends?.['1h'] || 'NEUTRAL' },
+    { name: '4 Hour', value: result.trends?.['4h'] || 'NEUTRAL' },
+    { name: '1 Day', value: result.trends?.['1d'] || 'NEUTRAL' },
   ]
+  const trendStrength = typeof result.trend_strength === 'number' ? result.trend_strength : 0
 
   return (
     <div className="glass border border-gray-700 rounded-lg p-6">
@@ -70,7 +71,7 @@ function TrendTable({ result }) {
         </div>
         <div>
           <p className="text-xs text-gray-400 uppercase mb-1">Trend Strength</p>
-          <p className="text-sm font-semibold">{(result.trend_strength * 100).toFixed(1)}%</p>
+          <p className="text-sm font-semibold">{(trendStrength * 100).toFixed(1)}%</p>
         </div>
       </div>
     </div>

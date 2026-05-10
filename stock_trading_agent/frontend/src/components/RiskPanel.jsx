@@ -3,7 +3,7 @@ import { Shield, Target, TrendingUp } from 'lucide-react'
 import { formatPrice } from '../utils/formatters'
 
 function RiskPanel({ result }) {
-  const { entry_price, stop_loss, take_profit, risk_reward_ratio } = result.risk
+  const { entry_price, stop_loss, take_profit, risk_reward_ratio } = result?.risk || {}
 
   return (
     <div className="glass border border-gray-700 rounded-lg p-6 space-y-4">
@@ -62,7 +62,7 @@ function RiskPanel({ result }) {
         <div>
           <p className="text-xs text-gray-400 uppercase mb-1">Support</p>
           <p className="text-sm font-semibold text-gray-300">
-            {result.support_zone && result.support_zone.length > 0
+            {Array.isArray(result?.support_zone) && result.support_zone.length > 0
               ? result.support_zone[0].toFixed(5)
               : '-'}
           </p>
@@ -70,7 +70,7 @@ function RiskPanel({ result }) {
         <div>
           <p className="text-xs text-gray-400 uppercase mb-1">Resistance</p>
           <p className="text-sm font-semibold text-gray-300">
-            {result.resistance_zone && result.resistance_zone.length > 0
+            {Array.isArray(result?.resistance_zone) && result.resistance_zone.length > 0
               ? result.resistance_zone[1].toFixed(5)
               : '-'}
           </p>
