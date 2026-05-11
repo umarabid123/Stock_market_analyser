@@ -48,29 +48,40 @@ function MarketCards({ result }) {
     },
   ]
 
+  const signal = result?.signal || 'HOLD'
+  const signalGlow = {
+    'BUY': 'glow-bullish',
+    'SELL': 'glow-bearish',
+    'HOLD': 'glow-gold',
+  }[signal] || 'glow-accent'
+
   return (
     <>
       {cards.map((card, idx) => {
         const Icon = card.icon
+        const cardGlow = card.title === 'Signal' ? signalGlow : ''
         return (
           <div
             key={idx}
-            className={`glass border border-gray-700 p-4 rounded-lg hover:border-gray-600 transition ${
-              card.bgColor || ''
-            }`}
+            className={`glass-lg border border-gray-700/50 p-5 rounded-xl hover-glow transition-smooth fade-in ${
+              card.bgColor ? `${card.bgColor}` : ''
+            } ${cardGlow}`}
+            style={{ animationDelay: `${idx * 0.1}s` }}
           >
-            <div className="flex items-start justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            <div className="flex items-start justify-between mb-4">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                 {card.title}
               </span>
-              <Icon size={18} className="text-gray-500" />
+              <div className="p-2 bg-gradient-to-br from-bullish to-gold rounded-lg">
+                <Icon size={16} className="text-dark-bg" />
+              </div>
             </div>
 
-            <p className={`text-2xl font-bold mb-1 ${card.className || 'text-white'}`}>
+            <p className={`text-3xl font-bold mb-2 ${card.className || 'text-white'}`}>
               {card.value}
             </p>
 
-            <p className="text-xs text-gray-500">{card.detail}</p>
+            <p className="text-xs text-gray-400 font-medium">{card.detail}</p>
           </div>
         )
       })}

@@ -74,27 +74,32 @@ function Chatbot({ currentResult }) {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-bullish to-gold text-dark-bg flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-110 transition animate-float"
+        className="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-gradient-to-br from-bullish to-gold text-dark-bg flex items-center justify-center shadow-2xl hover:shadow-[0_0_30px_rgba(0,255,136,0.5)] hover:scale-110 transition-smooth live-pulse"
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+        {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
       </button>
 
       {/* Chat Panel */}
       {isOpen && (
         <div
-          className={`fixed bottom-20 right-6 z-50 w-96 glass border border-gray-700 rounded-lg shadow-2xl transition-all ${
-            isMinimized ? 'h-14' : 'h-96'
+          className={`fixed bottom-24 right-6 z-50 w-96 glass-lg border border-gray-700/50 rounded-xl shadow-2xl transition-all fade-in ${
+            isMinimized ? 'h-16' : 'h-[500px]'
           }`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gradient-to-r from-bullish/10 to-gold/10">
-            <div className="flex items-center gap-2">
-              <MessageCircle size={18} className="text-gold" />
-              <h3 className="font-semibold">AI Trading Assistant</h3>
+          <div className="flex items-center justify-between p-4 border-b border-gray-700/50 bg-gradient-to-r from-bullish/20 to-gold/10 rounded-t-xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-bullish/20 rounded-lg">
+                <MessageCircle size={20} className="text-bullish" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white">AI Assistant</h3>
+                <p className="text-xs text-gray-400">Trading support</p>
+              </div>
             </div>
             <button
               onClick={() => setIsMinimized(!isMinimized)}
-              className="p-1 hover:bg-dark-card rounded transition"
+              className="p-1.5 hover:bg-bullish/10 rounded-lg transition-smooth text-gray-400 hover:text-bullish"
             >
               {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
             </button>
@@ -103,7 +108,7 @@ function Chatbot({ currentResult }) {
           {/* Messages */}
           {!isMinimized && (
             <>
-              <div className="h-56 overflow-y-auto p-4 space-y-4 bg-dark-bg">
+              <div className="h-96 overflow-y-auto p-4 space-y-4 bg-dark-bg/50">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -112,8 +117,8 @@ function Chatbot({ currentResult }) {
                     <div
                       className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
                         msg.sender === 'user'
-                          ? 'bg-bullish text-dark-bg font-semibold'
-                          : 'bg-dark-card border border-gray-700 text-gray-200'
+                          ? 'bg-gradient-to-r from-bullish to-bullish-dark text-dark-bg rounded-br-none shadow-glow-bullish'
+                          : 'bg-dark-card-light/70 border border-gray-700/50 text-gray-100 rounded-bl-none'
                       }`}
                     >
                       {msg.text}
@@ -122,7 +127,7 @@ function Chatbot({ currentResult }) {
                 ))}
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="bg-dark-card border border-gray-700 px-4 py-2 rounded-lg">
+                    <div className="bg-dark-card-light/70 border border-gray-700/50 px-4 py-3 rounded-lg rounded-bl-none">
                       <div className="flex gap-1">
                         <div className="w-2 h-2 rounded-full bg-gold animate-bounce" />
                         <div
@@ -142,14 +147,14 @@ function Chatbot({ currentResult }) {
 
               {/* Quick Questions */}
               {messages.length <= 2 && (
-                <div className="p-3 border-t border-gray-700 space-y-2">
-                  <p className="text-xs text-gray-400 uppercase font-semibold">Quick Questions</p>
+                <div className="p-3 border-t border-gray-700/50 space-y-2 bg-dark-card-light/30">
+                  <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">Quick Questions</p>
                   <div className="grid grid-cols-2 gap-2">
                     {quickQuestions.map((q, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleSendMessage(q)}
-                        className="text-xs p-2 bg-dark-card hover:bg-gray-700 rounded border border-gray-700 transition"
+                        className="text-xs p-2 bg-dark-card-light/50 hover:bg-dark-card-light border border-gray-700/50 hover:border-bullish/50 rounded-lg font-medium transition-smooth text-gray-300 hover:text-bullish"
                       >
                         {q}
                       </button>
@@ -159,20 +164,20 @@ function Chatbot({ currentResult }) {
               )}
 
               {/* Input */}
-              <div className="p-3 border-t border-gray-700 flex gap-2">
+              <div className="p-3 border-t border-gray-700/50 flex gap-2 bg-dark-card-light/30 rounded-b-xl">
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder="Ask anything..."
-                  className="flex-1 px-3 py-2 bg-dark-card border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-gold"
+                  className="flex-1 px-3 py-2 bg-dark-card-light/50 border border-gray-700/50 rounded-lg text-sm focus:outline-none focus:border-bullish focus:ring-1 focus:ring-bullish/50 text-gray-100 placeholder-gray-500 transition-smooth"
                   disabled={loading}
                 />
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={loading || !inputValue.trim()}
-                  className="p-2 bg-bullish text-dark-bg rounded-lg hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="p-2 bg-gradient-to-r from-bullish to-bullish-dark text-dark-bg rounded-lg hover:shadow-glow-bullish disabled:opacity-50 disabled:cursor-not-allowed transition-smooth font-semibold"
                 >
                   <Send size={16} />
                 </button>

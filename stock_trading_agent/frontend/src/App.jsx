@@ -61,7 +61,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen bg-dark-bg text-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-card text-gray-100 overflow-hidden">
       {/* Sidebar */}
       <Sidebar
         selectedMarket={selectedMarket}

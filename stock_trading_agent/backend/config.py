@@ -31,6 +31,9 @@ class Settings:
 
     # Forex / commodity APIs
     twelvedata_api_key: str = os.getenv("TWELVEDATA_API_KEY", "").strip()
+    
+    #print twelvedata_api_key to check if it's loaded correctly
+    # print(f"Twelve Data API Key: '{twelvedata_api_key}'")
 
     oanda_api_key: str = os.getenv("OANDA_API_KEY", "").strip()
     oanda_account_id: str = os.getenv("OANDA_ACCOUNT_ID", "").strip()
