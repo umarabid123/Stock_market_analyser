@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import MainDashboard from './components/MainDashboard'
@@ -8,8 +8,8 @@ import { analyzeMarket, getCandles } from './api/marketApi'
 function App() {
   const [selectedMarket, setSelectedMarket] = useState('Forex')
   const [selectedPair, setSelectedPair] = useState('GBP/USD')
-  const [selectedTimeframe, setSelectedTimeframe] = useState('15m')
-  const [selectedLookback, setSelectedLookback] = useState('5d')
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1m')
+  const [selectedLookback, setSelectedLookback] = useState('1d')
   const [autoRefresh, setAutoRefresh] = useState(false)
   const [refreshInterval, setRefreshInterval] = useState(60)
 
@@ -23,16 +23,13 @@ function App() {
     setLoading(true)
     setError(null)
     try {
-      const result = await analyzeMarket(selectedPair, selectedTimeframe, selectedLookback)
-      const safeResult = result ?? null
-      setAnalysisResult(safeResult)
-      console.log('analysis', safeResult)
+      const [result, candleData] = await Promise.all([
+        analyzeMarket(selectedPair, selectedTimeframe, selectedLookback),
+        getCandles(selectedPair, selectedTimeframe, selectedLookback),
+      ])
 
-      // Fetch candles
-      const candleData = await getCandles(selectedPair, selectedTimeframe, selectedLookback)
-      const safeCandles = Array.isArray(candleData) ? candleData : []
-      setCandles(safeCandles)
-      console.log('candles', safeCandles)
+      setAnalysisResult(result ?? null)
+      setCandles(Array.isArray(candleData) ? candleData : [])
     } catch (err) {
       setError(err?.message || 'Failed to analyze market')
       console.error('Analysis error:', err)
@@ -42,6 +39,14 @@ function App() {
       setLoading(false)
     }
   }, [selectedPair, selectedTimeframe, selectedLookback])
+
+  const hasAutoRunRef = useRef(false)
+
+  useEffect(() => {
+    if (hasAutoRunRef.current) return
+    hasAutoRunRef.current = true
+    performAnalysis()
+  }, [performAnalysis])
 
   // Handle market change
   const handleMarketChange = (market) => {
@@ -86,6 +91,7 @@ function App() {
         <Navbar
           selectedPair={selectedPair}
           analysisResult={analysisResult}
+          loading={loading}
         />
 
         {/* Dashboard */}
@@ -96,6 +102,8 @@ function App() {
           error={error}
           selectedPair={selectedPair}
           selectedTimeframe={selectedTimeframe}
+          selectedLookback={selectedLookback}
+          selectedMarket={selectedMarket}
         />
       </div>
 

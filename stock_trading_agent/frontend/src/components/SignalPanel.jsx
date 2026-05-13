@@ -26,8 +26,8 @@ function SignalPanel({ result }) {
               <Zap size={20} className="sm:w-6 sm:h-6 text-dark-bg" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-lg sm:text-2xl font-bold text-white">Trading Signal</h3>
-              <p className="text-xs text-gray-400">AI-Powered Analysis</p>
+              <h3 className="text-base sm:text-lg font-bold text-white">Trading Signal</h3>
+              <p className="text-[11px] text-gray-400">AI-Powered Analysis</p>
             </div>
           </div>
 
@@ -51,13 +51,13 @@ function SignalPanel({ result }) {
                 Signal
               </span>
             </div>
-            <p className={`text-4xl sm:text-5xl font-black ${getSignalColor(signal)}`}>{signal}</p>
+            <p className={`text-2xl sm:text-3xl font-bold ${getSignalColor(signal)}`}>{signal}</p>
           </div>
 
           <div className="mb-4 sm:mb-6 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-semibold text-gray-300">Confidence Score</span>
-              <span className={`text-base sm:text-lg font-bold ${getSignalColor(signal)}`}>{confidence}</span>
+              <span className="text-[11px] sm:text-xs font-semibold text-gray-300">Confidence Score</span>
+              <span className={`text-sm sm:text-base font-semibold ${getSignalColor(signal)}`}>{confidence}</span>
             </div>
             <div className="w-full h-2 sm:h-3 bg-dark-card-light rounded-full overflow-hidden border border-gray-700/50">
               <div
@@ -74,8 +74,8 @@ function SignalPanel({ result }) {
           </div>
 
           <div className="p-3 sm:p-4 bg-dark-card-light/50 rounded-lg border border-gray-700/50">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">📊 Analysis</p>
-            <p className="text-xs sm:text-sm text-gray-200 leading-relaxed font-medium line-clamp-4 sm:line-clamp-none">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">📊 Analysis</p>
+            <p className="text-xs text-gray-200 leading-relaxed font-medium line-clamp-4 sm:line-clamp-none">
               {result?.reason || 'Analyzing market conditions...'}
             </p>
           </div>
@@ -83,7 +83,7 @@ function SignalPanel({ result }) {
 
         <div className="flex flex-col gap-3 sm:gap-4 w-full lg:w-64 lg:flex-none">
           <div className="p-3 sm:p-4 glass border border-gray-700/50 rounded-lg">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Trend Strength</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Trend Strength</p>
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-300">Strength</span>
@@ -98,16 +98,16 @@ function SignalPanel({ result }) {
           <div className="p-3 sm:p-4 bg-yellow-900/20 border border-yellow-700/40 rounded-lg">
             <div className="flex items-start gap-2 mb-2">
               <AlertCircle size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs font-bold text-yellow-300 uppercase tracking-wide">⚠️ Notice</p>
+              <p className="text-[10px] font-bold text-yellow-300 uppercase tracking-wide">⚠️ Notice</p>
             </div>
-            <p className="text-xs text-yellow-100 leading-relaxed">
+            <p className="text-[11px] text-yellow-100 leading-relaxed">
               Educational analysis only. Use risk management. Never risk more than you can afford to lose.
             </p>
           </div>
 
           <div className="p-3 sm:p-4 glass border border-gray-700/50 rounded-lg">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Market Bias</p>
-            <p className={`text-lg sm:text-xl font-bold ${result?.market_bias === 'BULLISH' ? 'text-bullish' : 'text-bearish'}`}>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Market Bias</p>
+            <p className={`text-base sm:text-lg font-semibold ${result?.market_bias === 'BULLISH' ? 'text-bullish' : 'text-bearish'}`}>
               {result?.market_bias || '-'}
             </p>
           </div>

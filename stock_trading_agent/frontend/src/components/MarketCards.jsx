@@ -69,19 +69,19 @@ function MarketCards({ result }) {
             style={{ animationDelay: `${idx * 0.1}s` }}
           >
             <div className="flex items-start justify-between mb-3 sm:mb-4">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest line-clamp-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest line-clamp-2">
                 {card.title}
               </span>
               <div className="p-1.5 sm:p-2 bg-gradient-to-br from-bullish to-gold rounded-lg flex-shrink-0">
-                <Icon size={14} className="sm:w-4 sm:h-4 text-dark-bg" />
+                <Icon size={12} className="sm:w-4 sm:h-4 text-dark-bg" />
               </div>
             </div>
 
-            <p className={`text-2xl sm:text-3xl font-bold mb-2 break-words ${card.className || 'text-white'}`}>
+            <p className={`text-lg sm:text-xl font-semibold mb-2 break-words ${card.className || 'text-white'}`}>
               {card.value}
             </p>
 
-            <p className="text-xs text-gray-400 font-medium truncate">{card.detail}</p>
+            <p className="text-[11px] text-gray-400 font-medium truncate">{card.detail}</p>
           </div>
         )
       })}

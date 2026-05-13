@@ -4,7 +4,7 @@ import TradingChart from './TradingChart'
 import RiskPanel from './RiskPanel'
 import TrendTable from './TrendTable'
 import SignalPanel from './SignalPanel'
-import { AlertCircle, BarChart3 } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
 function MainDashboard({
   analysisResult,
@@ -13,7 +13,10 @@ function MainDashboard({
   error,
   selectedPair,
   selectedTimeframe,
+  selectedLookback,
+  selectedMarket,
 }) {
+  const defaultMarket = selectedMarket || 'Forex'
   return (
     <div className="flex-1 overflow-auto bg-dark-bg space-y-4 sm:space-y-6 md:space-y-8 p-4 sm:p-6 md:p-8">
       {/* Error Message */}
@@ -29,26 +32,62 @@ function MainDashboard({
 
       {/* Loading State */}
       {loading && !analysisResult && (
-        <div className="glass-lg border border-gray-700/50 p-8 sm:p-12 text-center fade-in">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-            <BarChart3 size={24} className="animate-bounce text-gold flex-shrink-0" />
-            <span className="text-lg sm:text-xl font-bold">Analyzing market...</span>
+        <div className="space-y-4 sm:space-y-6 fade-in">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="glass-lg border border-gray-700/50 p-4 rounded-lg">
+                <div className="skeleton h-3 w-20 mb-3"></div>
+                <div className="skeleton h-7 w-32"></div>
+                <div className="skeleton h-3 w-24 mt-3"></div>
+              </div>
+            ))}
           </div>
-          <p className="text-xs sm:text-sm text-gray-400 mt-2">Fetching real-time data and indicators</p>
-          <div className="mt-4 flex justify-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-bullish animate-bounce"></div>
-            <div className="w-2 h-2 rounded-full bg-bullish animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 rounded-full bg-bullish animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="lg:col-span-2 glass-lg border border-gray-700/50 p-4 rounded-lg">
+              <div className="skeleton h-4 w-36 mb-4"></div>
+              <div className="skeleton h-[360px] sm:h-[420px]"></div>
+            </div>
+            <div className="glass-lg border border-gray-700/50 p-4 rounded-lg">
+              <div className="skeleton h-4 w-28 mb-4"></div>
+              <div className="skeleton h-24"></div>
+              <div className="skeleton h-24 mt-3"></div>
+            </div>
           </div>
         </div>
       )}
 
       {/* No Data State */}
       {!loading && !analysisResult && (
-        <div className="glass-lg border border-gray-700/50 p-8 sm:p-12 text-center border-dashed">
-          <BarChart3 size={32} className="mx-auto mb-3 text-gray-500" />
-          <p className="text-base sm:text-lg text-gray-400">Click "Analyze Market" to get started</p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-3">Enter trading parameters in the sidebar</p>
+        <div className="glass-lg border border-gray-700/50 p-6 sm:p-10 text-left border-dashed">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-gray-500">Default Setup</p>
+              <h3 className="text-lg sm:text-xl font-bold text-white mt-2">{defaultMarket} Trading Preset</h3>
+              <p className="text-xs sm:text-sm text-gray-400 mt-2">
+                Use the sidebar to adjust the preset, then run a fresh analysis.
+              </p>
+            </div>
+            <div className="glass border border-gray-700/60 px-4 py-3 rounded-lg">
+              <p className="text-xs text-gray-400 uppercase tracking-widest">Ready</p>
+              <p className="text-sm font-semibold text-white">Select Analyze Market</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+            <div className="glass border border-gray-700/50 px-4 py-3 rounded-lg">
+              <p className="text-xs text-gray-500 uppercase tracking-widest">Pair</p>
+              <p className="text-base font-semibold text-white mt-1">{selectedPair}</p>
+            </div>
+            <div className="glass border border-gray-700/50 px-4 py-3 rounded-lg">
+              <p className="text-xs text-gray-500 uppercase tracking-widest">Timeframe</p>
+              <p className="text-base font-semibold text-white mt-1">{selectedTimeframe}</p>
+            </div>
+            <div className="glass border border-gray-700/50 px-4 py-3 rounded-lg">
+              <p className="text-xs text-gray-500 uppercase tracking-widest">Lookback</p>
+              <p className="text-base font-semibold text-white mt-1">{selectedLookback}</p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -64,7 +103,13 @@ function MainDashboard({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Trading Chart - Full width on mobile */}
             <div className="lg:col-span-2">
-              <TradingChart candles={candles} pair={selectedPair} />
+              <TradingChart
+                candles={candles}
+                pair={selectedPair}
+                timeframe={selectedTimeframe}
+                loading={loading}
+                theme="light"
+              />
             </div>
 
             {/* Risk Panel - Full width on mobile */}

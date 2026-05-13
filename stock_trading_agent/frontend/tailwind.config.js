@@ -70,8 +70,8 @@ module.exports = {
         'bearish-grad': 'linear-gradient(135deg, #ff3333 0%, #cc2626 100%)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['Fira Code', 'monospace'],
+        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
     },
   },

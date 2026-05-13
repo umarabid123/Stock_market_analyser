@@ -6,4 +6,4 @@ numpy==1.26.2
 yfinance==0.2.32
 python-dotenv==1.0.0
 requests==2.31.0
-twelvedata==1.16.1
+twelvedata==1.4.0
