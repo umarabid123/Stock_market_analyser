@@ -1,5 +1,5 @@
 .env
-# add important files to ignore
+# add important files to ign
 node_modules/
 dist/
 build/
