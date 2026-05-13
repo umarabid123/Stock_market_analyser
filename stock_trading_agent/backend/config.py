@@ -53,7 +53,7 @@ class Settings:
 
     # Forex dashboard defaults
     default_market: str = os.getenv("DEFAULT_MARKET", "Forex").strip() or "Forex"
-    default_pair: str = os.getenv("DEFAULT_PAIR", "EUR/USD").strip() or "EUR/USD"
+    default_pair: str = os.getenv("DEFAULT_PAIR", "GBP/USD").strip() or "GBP/USD"
     default_lookback: str = os.getenv("DEFAULT_LOOKBACK", "5d").strip() or "5d"
     default_timeframe: str = (
         os.getenv("DEFAULT_TIMEFRAME", "15m").strip() or "15m"

@@ -33,8 +33,10 @@ class MarketDataProvider:
                 continue
 
             frame = fetcher(symbol, period, interval)
-            if frame is not None and not frame.empty:
-                return self._normalize(frame)
+            df = self._normalize(frame) if frame is not None and not frame.empty else pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+            print("Provider:", provider, "Symbol:", symbol, "Interval:", interval, "Rows:", len(df))
+            if not df.empty:
+                return df
 
         return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
 
@@ -63,6 +65,9 @@ class MarketDataProvider:
                 except Exception:
                     # If indicators fail, keep raw frame but ensure expected columns exist
                     pass
+                if df is None or df.empty:
+                    out[key] = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+                    continue
                 out[key] = df
             except Exception:
                 out[key] = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
@@ -187,6 +192,9 @@ class MarketDataProvider:
 
     @staticmethod
     def _normalize(frame: pd.DataFrame) -> pd.DataFrame:
+        if frame is None or frame.empty:
+            return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+
         # yfinance may return MultiIndex columns when downloading multiple assets.
         normalized_names: dict[object, str] = {}
         for col in frame.columns:
@@ -220,11 +228,16 @@ class MarketDataProvider:
                     clean[target] = frame[match]
                     break
 
-        required = ["Open", "High", "Low", "Close", "Volume"]
-        if not all(col in clean.columns for col in required):
-            return pd.DataFrame(columns=required)
+        required_prices = ["Open", "High", "Low", "Close"]
+        if not all(col in clean.columns for col in required_prices):
+            return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+        if "Volume" not in clean.columns:
+            clean["Volume"] = 0.0
 
-        clean = clean[required].dropna()
+        clean = clean[["Open", "High", "Low", "Close", "Volume"]]
+        for col in ["Open", "High", "Low", "Close", "Volume"]:
+            clean[col] = pd.to_numeric(clean[col], errors="coerce")
+        clean = clean.dropna(subset=required_prices)
         clean = clean.sort_index()
         return clean
 
@@ -274,7 +287,15 @@ class MarketDataProvider:
 
     @staticmethod
     def _twelvedata_interval(interval: str) -> str:
-        return interval.strip().lower()
+        value = interval.strip().lower()
+        return {
+            "1m": "1min",
+            "5m": "5min",
+            "15m": "15min",
+            "1h": "1h",
+            "4h": "4h",
+            "1d": "1day",
+        }.get(value, value)
 
     @staticmethod
     def _outputsize(period: str) -> str:
@@ -332,6 +353,7 @@ class MarketDataProvider:
             "EUR/USD": "EURUSD=X",
             "GBP/USD": "GBPUSD=X",
             "USD/JPY": "JPY=X",
+            "USD/CAD": "CAD=X",
             "AUD/USD": "AUDUSD=X",
             "XAU/USD": "GC=F",
             "XAG/USD": "SI=F",

@@ -70,11 +70,19 @@ class Predictor:
             reasons.append("volume is elevated and confirms participation")
 
         score_gap = bullish_score - bearish_score
-        if score_gap > 1.5:
+        
+        # More responsive thresholds for real-time predictions
+        if score_gap > 1.0:
             signal = "BUY"
             bias = "BULLISH"
-        elif score_gap < -1.5:
+        elif score_gap < -1.0:
             signal = "SELL"
+            bias = "BEARISH"
+        elif score_gap > 0.3:
+            signal = "WAIT_FOR_BUY"
+            bias = "BULLISH"
+        elif score_gap < -0.3:
+            signal = "WAIT_FOR_SELL"
             bias = "BEARISH"
         else:
             signal = "HOLD"

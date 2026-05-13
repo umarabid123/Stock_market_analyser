@@ -18,21 +18,21 @@ function SignalPanel({ result }) {
   }[signal] || ''
 
   return (
-    <div className={`glass-lg border border-gray-700/50 rounded-xl p-8 fade-in ${signalBgGlass}`}>
-      <div className="flex items-start gap-8">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-bullish to-gold rounded-lg">
-              <Zap size={24} className="text-dark-bg" />
+    <div className={`glass-lg border border-gray-700/50 rounded-lg sm:rounded-xl p-4 sm:p-6 md:p-8 fade-in ${signalBgGlass}`}>
+      <div className="flex flex-col lg:flex-row items-start gap-4 sm:gap-6 md:gap-8">
+        <div className="flex-1 w-full">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <div className="p-2 sm:p-3 bg-gradient-to-br from-bullish to-gold rounded-lg flex-shrink-0">
+              <Zap size={20} className="sm:w-6 sm:h-6 text-dark-bg" />
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-white">Trading Signal</h3>
+            <div className="min-w-0">
+              <h3 className="text-lg sm:text-2xl font-bold text-white">Trading Signal</h3>
               <p className="text-xs text-gray-400">AI-Powered Analysis</p>
             </div>
           </div>
 
           <div
-            className={`inline-block px-8 py-4 rounded-xl border-2 mb-6 ${
+            className={`inline-block px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl border-2 mb-4 sm:mb-6 ${
               signal === 'BUY'
                 ? 'border-bullish/50 bg-bullish/10 ' + signalGlowClass
                 : signal === 'SELL'
@@ -41,8 +41,8 @@ function SignalPanel({ result }) {
             }`}
           >
             <div className="flex items-center gap-2 mb-2">
-              {signal === 'BUY' && <TrendingUp size={20} className="text-bullish" />}
-              {signal === 'SELL' && <TrendingDown size={20} className="text-bearish" />}
+              {signal === 'BUY' && <TrendingUp size={18} className="sm:w-5 sm:h-5 text-bullish" />}
+              {signal === 'SELL' && <TrendingDown size={18} className="sm:w-5 sm:h-5 text-bearish" />}
               <span
                 className={`text-xs font-bold uppercase tracking-widest ${
                   signal === 'BUY' ? 'text-bullish' : signal === 'SELL' ? 'text-bearish' : 'text-yellow-400'
@@ -51,15 +51,15 @@ function SignalPanel({ result }) {
                 Signal
               </span>
             </div>
-            <p className={`text-5xl font-black ${getSignalColor(signal)}`}>{signal}</p>
+            <p className={`text-4xl sm:text-5xl font-black ${getSignalColor(signal)}`}>{signal}</p>
           </div>
 
-          <div className="mb-6 space-y-3">
+          <div className="mb-4 sm:mb-6 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-300">Confidence Score</span>
-              <span className={`text-lg font-bold ${getSignalColor(signal)}`}>{confidence}</span>
+              <span className="text-xs sm:text-sm font-semibold text-gray-300">Confidence Score</span>
+              <span className={`text-base sm:text-lg font-bold ${getSignalColor(signal)}`}>{confidence}</span>
             </div>
-            <div className="w-full h-3 bg-dark-card-light rounded-full overflow-hidden border border-gray-700/50">
+            <div className="w-full h-2 sm:h-3 bg-dark-card-light rounded-full overflow-hidden border border-gray-700/50">
               <div
                 className={`h-full transition-all duration-500 ${
                   signal === 'BUY'
@@ -73,16 +73,16 @@ function SignalPanel({ result }) {
             </div>
           </div>
 
-          <div className="p-4 bg-dark-card-light/50 rounded-lg border border-gray-700/50">
+          <div className="p-3 sm:p-4 bg-dark-card-light/50 rounded-lg border border-gray-700/50">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">📊 Analysis</p>
-            <p className="text-sm text-gray-200 leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm text-gray-200 leading-relaxed font-medium line-clamp-4 sm:line-clamp-none">
               {result?.reason || 'Analyzing market conditions...'}
             </p>
           </div>
         </div>
 
-        <div className="hidden lg:flex flex-col gap-4 w-64">
-          <div className="p-4 glass border border-gray-700/50 rounded-lg">
+        <div className="flex flex-col gap-3 sm:gap-4 w-full lg:w-64 lg:flex-none">
+          <div className="p-3 sm:p-4 glass border border-gray-700/50 rounded-lg">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Trend Strength</p>
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
@@ -95,7 +95,7 @@ function SignalPanel({ result }) {
             </div>
           </div>
 
-          <div className="p-4 bg-yellow-900/20 border border-yellow-700/40 rounded-lg">
+          <div className="p-3 sm:p-4 bg-yellow-900/20 border border-yellow-700/40 rounded-lg">
             <div className="flex items-start gap-2 mb-2">
               <AlertCircle size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
               <p className="text-xs font-bold text-yellow-300 uppercase tracking-wide">⚠️ Notice</p>
@@ -105,9 +105,9 @@ function SignalPanel({ result }) {
             </p>
           </div>
 
-          <div className="p-4 glass border border-gray-700/50 rounded-lg">
+          <div className="p-3 sm:p-4 glass border border-gray-700/50 rounded-lg">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Market Bias</p>
-            <p className={`text-xl font-bold ${result?.market_bias === 'BULLISH' ? 'text-bullish' : 'text-bearish'}`}>
+            <p className={`text-lg sm:text-xl font-bold ${result?.market_bias === 'BULLISH' ? 'text-bullish' : 'text-bearish'}`}>
               {result?.market_bias || '-'}
             </p>
           </div>

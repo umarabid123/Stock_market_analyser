@@ -7,7 +7,7 @@ import { analyzeMarket, getCandles } from './api/marketApi'
 
 function App() {
   const [selectedMarket, setSelectedMarket] = useState('Forex')
-  const [selectedPair, setSelectedPair] = useState('EUR/USD')
+  const [selectedPair, setSelectedPair] = useState('GBP/USD')
   const [selectedTimeframe, setSelectedTimeframe] = useState('15m')
   const [selectedLookback, setSelectedLookback] = useState('5d')
   const [autoRefresh, setAutoRefresh] = useState(false)
@@ -48,11 +48,11 @@ function App() {
     setSelectedMarket(market)
     // Auto-select appropriate pair based on market
     const marketPairs = {
-      'Forex': 'EUR/USD',
+      'Forex': 'GBP/USD',
       'Commodities': 'XAU/USD',
       'Crypto': 'BTC/USD',
     }
-    setSelectedPair(marketPairs[market] || 'EUR/USD')
+    setSelectedPair(marketPairs[market] || 'GBP/USD')
   }
 
   // Handle analyze button click

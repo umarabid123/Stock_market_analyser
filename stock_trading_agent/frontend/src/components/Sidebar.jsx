@@ -28,7 +28,7 @@ function Sidebar({
 
   const markets = ['Forex', 'Commodities', 'Crypto']
   const pairsByMarket = {
-    Forex: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD'],
+    Forex: ['GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD'],
     Commodities: ['XAU/USD', 'XAG/USD', 'CL=F', 'NG=F'],
     Crypto: ['BTC/USD', 'ETH/USD', 'XRP/USD', 'ADA/USD'],
   }

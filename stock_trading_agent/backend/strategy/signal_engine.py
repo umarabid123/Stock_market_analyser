@@ -185,14 +185,52 @@ class SignalEngine:
         return value
 
     @staticmethod
-    def _classify_signal(higher_bias: float, confirmation_bias: float, trends: Dict[str, str]) -> str:
+    def _classify_signal(higher_bias: float, confirmation_bias: float, trends: Dict[str, str], predictor_signal: str) -> str:
+        """Combine predictor signal with bias confirmation for final trading signal.
+        
+        If predictor already has a clear signal (BUY/SELL), respect it unless bias strongly contradicts.
+        For HOLD/WAIT signals, use bias to refine.
+        """
         bullish_count = sum(1 for value in trends.values() if value == "BULLISH")
         bearish_count = sum(1 for value in trends.values() if value == "BEARISH")
 
+        # If predictor is BUY, check confirmation
+        if predictor_signal == "BUY":
+            if higher_bias > 0 and confirmation_bias >= 0:
+                return "STRONG BUY" if bullish_count >= 4 else "BUY"
+            elif higher_bias > 0:
+                return "BUY"
+            elif higher_bias <= 0 and confirmation_bias > 0:
+                return "WAIT_FOR_BUY"
+            return "BUY"  # Still prefer BUY from predictor
+        
+        # If predictor is SELL, check confirmation
+        if predictor_signal == "SELL":
+            if higher_bias < 0 and confirmation_bias <= 0:
+                return "STRONG SELL" if bearish_count >= 4 else "SELL"
+            elif higher_bias < 0:
+                return "SELL"
+            elif higher_bias >= 0 and confirmation_bias < 0:
+                return "WAIT_FOR_SELL"
+            return "SELL"  # Still prefer SELL from predictor
+        
+        # If predictor is WAIT_FOR_BUY
+        if predictor_signal == "WAIT_FOR_BUY":
+            if higher_bias > 0 and confirmation_bias > 0:
+                return "BUY"
+            return "WAIT_FOR_BUY"
+        
+        # If predictor is WAIT_FOR_SELL
+        if predictor_signal == "WAIT_FOR_SELL":
+            if higher_bias < 0 and confirmation_bias < 0:
+                return "SELL"
+            return "WAIT_FOR_SELL"
+        
+        # Predictor says HOLD - use bias logic
         if higher_bias > 0 and confirmation_bias > 0:
-            return "STRONG BUY" if bullish_count >= 4 else "BUY"
+            return "BUY"
         if higher_bias < 0 and confirmation_bias < 0:
-            return "STRONG SELL" if bearish_count >= 4 else "SELL"
+            return "SELL"
         if higher_bias > 0 and confirmation_bias <= 0:
             return "WAIT_FOR_BUY"
         if higher_bias < 0 and confirmation_bias >= 0:
@@ -217,43 +255,63 @@ class SignalEngine:
         higher_bias = sum(TIMEFRAME_WEIGHTS.get(key, 1.0) for key in ("1d", "4h", "1h") if trends.get(key) == "BULLISH") - sum(TIMEFRAME_WEIGHTS.get(key, 1.0) for key in ("1d", "4h", "1h") if trends.get(key) == "BEARISH")
         lower_bias = sum(TIMEFRAME_WEIGHTS.get(key, 1.0) for key in ("15m", "5m") if trends.get(key) == "BULLISH") - sum(TIMEFRAME_WEIGHTS.get(key, 1.0) for key in ("15m", "5m") if trends.get(key) == "BEARISH")
 
+        # Signal alignment with higher timeframe bias
         if final_signal in {"BUY", "STRONG BUY"} and higher_bias > 0:
-            confidence += 0.08
-        if final_signal in {"SELL", "STRONG SELL"} and higher_bias < 0:
-            confidence += 0.08
-        if final_signal in {"WAIT_FOR_BUY", "WAIT_FOR_SELL"}:
+            confidence += 0.12
+        elif final_signal in {"BUY", "STRONG BUY"} and higher_bias <= 0:
             confidence -= 0.05
+            
+        if final_signal in {"SELL", "STRONG SELL"} and higher_bias < 0:
+            confidence += 0.12
+        elif final_signal in {"SELL", "STRONG SELL"} and higher_bias >= 0:
+            confidence -= 0.05
+            
+        # Wait signals get moderate boost
+        if final_signal in {"WAIT_FOR_BUY", "WAIT_FOR_SELL"}:
+            confidence += 0.02
+        
+        # Volume confirmation
         if volume_strength == "STRONG":
-            confidence += 0.08
+            confidence += 0.12
         elif volume_strength == "MODERATE":
-            confidence += 0.04
-        else:
-            confidence -= 0.03
+            confidence += 0.06
+        elif volume_strength == "WEAK":
+            confidence -= 0.04
 
+        # Session volatility adjustment
         if session.get("session_volatility") == "HIGH":
             confidence += 0.08
         elif session.get("active_session") in {"London", "New York"}:
-            confidence += 0.04
+            confidence += 0.05
+        elif session.get("session_volatility") == "LOW":
+            confidence -= 0.03
 
+        # Sentiment alignment
         sentiment_label = sentiment.get("sentiment", "UNAVAILABLE")
         if sentiment_label == "POSITIVE" and final_signal in {"BUY", "STRONG BUY", "WAIT_FOR_BUY"}:
-            confidence += 0.05
+            confidence += 0.08
         elif sentiment_label == "NEGATIVE" and final_signal in {"SELL", "STRONG SELL", "WAIT_FOR_SELL"}:
-            confidence += 0.05
+            confidence += 0.08
         elif sentiment_label == "NEGATIVE" and final_signal in {"BUY", "STRONG BUY"}:
-            confidence -= 0.04
+            confidence -= 0.06
         elif sentiment_label == "POSITIVE" and final_signal in {"SELL", "STRONG SELL"}:
-            confidence -= 0.04
+            confidence -= 0.06
 
+        # Market structure alignment
         if structure.get("market_structure") == "Bullish" and final_signal in {"BUY", "STRONG BUY", "WAIT_FOR_BUY"}:
-            confidence += 0.04
-        if structure.get("market_structure") == "Bearish" and final_signal in {"SELL", "STRONG SELL", "WAIT_FOR_SELL"}:
-            confidence += 0.04
+            confidence += 0.06
+        elif structure.get("market_structure") == "Bearish" and final_signal in {"SELL", "STRONG SELL", "WAIT_FOR_SELL"}:
+            confidence += 0.06
 
+        # Timeframe alignment
         if lower_bias > 0 and final_signal in {"BUY", "STRONG BUY", "WAIT_FOR_BUY"}:
-            confidence += 0.03
-        if lower_bias < 0 and final_signal in {"SELL", "STRONG SELL", "WAIT_FOR_SELL"}:
-            confidence += 0.03
+            confidence += 0.06
+        elif lower_bias < 0 and final_signal in {"SELL", "STRONG SELL", "WAIT_FOR_SELL"}:
+            confidence += 0.06
+        elif lower_bias > 0 and final_signal in {"SELL", "STRONG SELL", "WAIT_FOR_SELL"}:
+            confidence -= 0.04
+        elif lower_bias < 0 and final_signal in {"BUY", "STRONG BUY", "WAIT_FOR_BUY"}:
+            confidence -= 0.04
 
         return max(0.0, min(1.0, confidence))
 
@@ -313,7 +371,8 @@ class SignalEngine:
 
         higher_bias = self._weighted_bias(trends, ["1d", "4h", "1h"])
         confirmation_bias = self._weighted_bias(trends, ["15m", "5m"])
-        final_signal = self._classify_signal(higher_bias, confirmation_bias, trends)
+        predictor_signal = prediction.get("signal", "HOLD")
+        final_signal = self._classify_signal(higher_bias, confirmation_bias, trends, predictor_signal)
 
         # Base confidence from predictor
         confidence = float(prediction.get("confidence", 0.0))

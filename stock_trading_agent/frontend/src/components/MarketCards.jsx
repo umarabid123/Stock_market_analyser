@@ -63,25 +63,25 @@ function MarketCards({ result }) {
         return (
           <div
             key={idx}
-            className={`glass-lg border border-gray-700/50 p-5 rounded-xl hover-glow transition-smooth fade-in ${
+            className={`glass-lg border border-gray-700/50 p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl hover-glow transition-smooth fade-in ${
               card.bgColor ? `${card.bgColor}` : ''
             } ${cardGlow}`}
             style={{ animationDelay: `${idx * 0.1}s` }}
           >
-            <div className="flex items-start justify-between mb-4">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest line-clamp-2">
                 {card.title}
               </span>
-              <div className="p-2 bg-gradient-to-br from-bullish to-gold rounded-lg">
-                <Icon size={16} className="text-dark-bg" />
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-bullish to-gold rounded-lg flex-shrink-0">
+                <Icon size={14} className="sm:w-4 sm:h-4 text-dark-bg" />
               </div>
             </div>
 
-            <p className={`text-3xl font-bold mb-2 ${card.className || 'text-white'}`}>
+            <p className={`text-2xl sm:text-3xl font-bold mb-2 break-words ${card.className || 'text-white'}`}>
               {card.value}
             </p>
 
-            <p className="text-xs text-gray-400 font-medium">{card.detail}</p>
+            <p className="text-xs text-gray-400 font-medium truncate">{card.detail}</p>
           </div>
         )
       })}

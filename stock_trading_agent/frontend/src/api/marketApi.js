@@ -1,6 +1,18 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+// Auto-detect API URL based on environment
+const getAPIBaseURL = () => {
+  // In development with Vite proxy
+  if (import.meta.env.DEV) {
+    return 'http://localhost:8000'
+  }
+  // In production, use relative path or configured URL
+  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+}
+
+const API_BASE_URL = getAPIBaseURL()
+
+console.log('🔗 API Base URL:', API_BASE_URL)
 
 const client = axios.create({
   baseURL: API_BASE_URL,
@@ -9,6 +21,24 @@ const client = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+// Add request interceptor for debugging
+client.interceptors.request.use((config) => {
+  console.log(`📡 API Request: ${config.method?.toUpperCase()} ${config.url}`)
+  return config
+})
+
+// Add response interceptor for error handling
+client.interceptors.response.use(
+  (response) => {
+    console.log(`✅ API Response: ${response.status}`)
+    return response
+  },
+  (error) => {
+    console.error('❌ API Error:', error.message, error.response?.status)
+    return Promise.reject(error)
+  }
+)
 
 /**
  * Analyze market for a given symbol
