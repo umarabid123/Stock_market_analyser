@@ -5,6 +5,7 @@ import { sendChatMessage } from '../api/marketApi'
 function Chatbot({ currentResult }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
+  const [showQuickQuestions, setShowQuickQuestions] = useState(true)
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -32,6 +33,12 @@ function Chatbot({ currentResult }) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages])
+
+  useEffect(() => {
+    if (isOpen && showQuickQuestions) {
+      setShowQuickQuestions(false)
+    }
+  }, [isOpen, showQuickQuestions])
 
   // Handle sending message
   const handleSendMessage = async (message = inputValue) => {
@@ -148,7 +155,8 @@ function Chatbot({ currentResult }) {
               </div>
 
               {/* Quick Questions */}
-              <div className="chatbot-quick-questions bg-dark-card-light/30">
+              {showQuickQuestions && (
+                <div className="chatbot-quick-questions bg-dark-card-light/30">
                 <div className="space-y-2">
                   <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">Quick Questions</p>
                   <div className="grid grid-cols-2 gap-2">
@@ -163,7 +171,8 @@ function Chatbot({ currentResult }) {
                     ))}
                   </div>
                 </div>
-              </div>
+                </div>
+              )}
 
               {/* Input */}
               <div className="chatbot-input-area flex gap-2 bg-dark-card-light/30 rounded-b-xl">
