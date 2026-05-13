@@ -20,8 +20,10 @@ function Chatbot({ currentResult }) {
   const quickQuestions = [
     'Explain current signal',
     'What is HOLD?',
-    'What is risk management?',
-    'Tell me about XAU/USD',
+    'Why risk is empty?',
+    'What is XAU/USD?',
+    'What is timeframe?',
+    'How should beginner use this?',
   ]
 
   // Scroll to bottom
@@ -74,7 +76,7 @@ function Chatbot({ currentResult }) {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-gradient-to-br from-bullish to-gold text-dark-bg flex items-center justify-center shadow-2xl hover:shadow-[0_0_30px_rgba(0,255,136,0.5)] hover:scale-110 transition-smooth live-pulse"
+        className="chatbot-fab w-16 h-16 rounded-full bg-gradient-to-br from-bullish to-gold text-dark-bg flex items-center justify-center shadow-2xl hover:shadow-[0_0_30px_rgba(0,255,136,0.5)] hover:scale-110 transition-smooth live-pulse"
       >
         {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
       </button>
@@ -82,7 +84,7 @@ function Chatbot({ currentResult }) {
       {/* Chat Panel */}
       {isOpen && (
         <div
-          className={`fixed bottom-24 right-6 z-50 w-96 glass-lg border border-gray-700/50 rounded-xl shadow-2xl transition-all fade-in ${
+          className={`chatbot-panel glass-lg border border-gray-700/50 rounded-xl shadow-2xl transition-all fade-in ${
             isMinimized ? 'h-16' : 'h-[500px]'
           }`}
         >
@@ -108,7 +110,7 @@ function Chatbot({ currentResult }) {
           {/* Messages */}
           {!isMinimized && (
             <>
-              <div className="h-96 overflow-y-auto p-4 space-y-4 bg-dark-bg/50">
+              <div className="chatbot-messages space-y-4 bg-dark-bg/50 p-4">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -146,8 +148,8 @@ function Chatbot({ currentResult }) {
               </div>
 
               {/* Quick Questions */}
-              {messages.length <= 2 && (
-                <div className="p-3 border-t border-gray-700/50 space-y-2 bg-dark-card-light/30">
+              <div className="chatbot-quick-questions bg-dark-card-light/30">
+                <div className="space-y-2">
                   <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">Quick Questions</p>
                   <div className="grid grid-cols-2 gap-2">
                     {quickQuestions.map((q, idx) => (
@@ -161,10 +163,10 @@ function Chatbot({ currentResult }) {
                     ))}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Input */}
-              <div className="p-3 border-t border-gray-700/50 flex gap-2 bg-dark-card-light/30 rounded-b-xl">
+              <div className="chatbot-input-area flex gap-2 bg-dark-card-light/30 rounded-b-xl">
                 <input
                   type="text"
                   value={inputValue}

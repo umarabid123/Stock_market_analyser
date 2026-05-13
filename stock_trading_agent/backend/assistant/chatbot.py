@@ -3,14 +3,70 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, Any
+from typing import Any, Dict
 
 import requests
 
 from config import settings
 
 
-def _format_current_result(current_result: Dict[str, Any]) -> Dict[str, Any]:
+WARNING_TEXT = "This is educational paper-trading analysis, not financial advice."
+
+
+def _with_warning(text: str) -> str:
+    if WARNING_TEXT.lower() in text.lower():
+        return text
+    return f"{text} {WARNING_TEXT}"
+
+
+def _detect_intent(question: str) -> str:
+    if any(word in question for word in ("hi", "hello", "hey", "how are you")):
+        return "greeting"
+    if any(word in question for word in ("beginner", "no idea", "guide", "how works", "how work", "how use", "how to use", "how it works", "explain app", "understand")):
+        return "beginner"
+    if any(word in question for word in ("chart", "graph", "candle", "candlestick", "red candle", "green candle")):
+        return "chart"
+    if any(word in question for word in ("current signal", "explain signal", "buy", "sell", "strong buy", "strong sell")):
+        return "signal"
+    if any(word in question for word in ("hold",)):
+        return "hold"
+    if any(word in question for word in ("risk", "stop loss", "stoploss", "sl", "take profit", "tp", "empty risk")):
+        return "risk"
+    if any(word in question for word in ("real time", "realtime", "live", "prediction")):
+        return "realtime"
+    if any(word in question for word in ("timeframe", "15m", "1h", "5m", "4h")):
+        return "timeframe"
+    if any(word in question for word in ("xau", "gold", "xag", "silver", "gbp", "eur", "btc", "crypto")):
+        return "pair"
+    return "general"
+
+
+def _extract_symbol(current_result: Dict[str, Any] | None, symbol: str | None) -> str:
+    if symbol:
+        return symbol
+    if isinstance(current_result, dict):
+        value = current_result.get("symbol")
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
+def _signal_summary(signal: str) -> str:
+    if signal in {"BUY", "STRONG BUY"}:
+        return "bullish conditions"
+    if signal in {"SELL", "STRONG SELL"}:
+        return "bearish conditions"
+    if signal == "HOLD":
+        return "no clear safe setup"
+    if signal == "WAIT_FOR_BUY":
+        return "bullish bias, but entry is not confirmed"
+    if signal == "WAIT_FOR_SELL":
+        return "bearish bias, but entry is not confirmed"
+    return "unclear conditions"
+
+
+def _format_current_result(current_result: Dict[str, Any] | None) -> Dict[str, Any]:
+    current_result = current_result if isinstance(current_result, dict) else {}
     trends = current_result.get('trends', {}) if isinstance(current_result.get('trends', {}), dict) else {}
     risk = current_result.get('risk', {}) if isinstance(current_result.get('risk', {}), dict) else {}
     return {
@@ -62,106 +118,90 @@ def _gemini_chat_response(prompt_text: str) -> str:
     return ''
 
 
-def get_chatbot_response(user_question: str, current_result: Dict[str, Any]) -> str:
+def get_chatbot_response(user_question: str, result: Dict[str, Any] | None = None, symbol: str | None = None) -> str:
     """Generate a response to user question based on current dashboard result."""
     question = user_question.strip().lower()
-    current = _format_current_result(current_result)
+    current = _format_current_result(result)
+    current_symbol = _extract_symbol(result, symbol)
+    risk_empty = not current.get('stop_loss') and not current.get('take_profit') and not current.get('risk_reward_ratio')
+
+    intent = _detect_intent(question)
+
+    if intent == "greeting":
+        return _with_warning("Hi! I can help you understand this forex dashboard, signals, chart, risk levels, and how to use it safely.")
+
+    if intent == "beginner":
+        return _with_warning(
+            "This dashboard helps you analyze forex, gold, silver, and crypto. Step 1: choose a pair such as XAU/USD or GBP/USD. Step 2: choose a timeframe like 15m for short-term or 1h/4h for trend. Step 3: click Analyze. Step 4: read the signal: BUY, SELL, HOLD, or WAIT. Step 5: check confidence, chart trend, stop loss, and take profit. Use it for paper trading and learning only."
+        )
+
+    if intent == "chart":
+        return _with_warning("The chart shows price movement using candles. Each candle has open, high, low, and close prices. Green candles mean price moved up, and red candles mean price moved down. Use 15m for entry view and 1h/4h for bigger trend.")
+
+    if intent == "signal":
+        signal = current['signal']
+        if signal == "HOLD":
+            explanation = "no clear safe setup"
+        elif signal in {"BUY", "STRONG BUY"}:
+            explanation = "bullish conditions"
+        elif signal in {"SELL", "STRONG SELL"}:
+            explanation = "bearish conditions"
+        elif signal == "WAIT_FOR_BUY":
+            explanation = "bullish bias but entry is not confirmed"
+        elif signal == "WAIT_FOR_SELL":
+            explanation = "bearish bias but entry is not confirmed"
+        else:
+            explanation = "unclear conditions"
+
+        return _with_warning(
+            f"The current signal is {signal} with {float(current.get('confidence', 0.0)) * 100:.1f}% confidence. This means the system sees {explanation}. It is not guaranteed; confirm with chart and risk levels."
+        )
+
+    if intent == "hold":
+        return _with_warning("HOLD means there is no clear safe setup right now.")
+
+    if intent == "risk":
+        return _with_warning("Risk management shows where a trade idea becomes invalid. Stop loss limits loss. Take profit is the target. If signal is HOLD or WAIT, risk levels may be empty because no active trade is confirmed.")
+
+    if intent == "realtime":
+        return _with_warning("This dashboard uses near-real-time market data from APIs and refreshes candles. It gives probability-based analysis, not guaranteed future prediction.")
+
+    if intent == "timeframe":
+        return _with_warning("This dashboard uses candle timeframes. 15m is faster and 1h/4h show the larger trend.")
+
+    if intent == "pair":
+        return _with_warning("Pairs represent markets. XAU/USD is gold against the US dollar, XAG/USD is silver, GBP/USD is British pound against the US dollar, and BTC/USD is Bitcoin against the US dollar.")
 
     if settings.gemini_api_key:
         model_prompt = (
-            f"Answer this question in simple English for a non-expert user. "
-            f"Question: {user_question}. "
-            f"Current market signal: {current['signal']}, confidence: {current['confidence'] * 100:.1f}%, "
-            f"market bias: {current['market_bias']}, 1D trend: {current['trend_1d']}, 4H trend: {current['trend_4h']}, "
-            f"1H trend: {current['trend_1h']}, 15M trend: {current['trend_15m']}, 5M trend: {current['trend_5m']}. "
-            f"Stop loss: {current['stop_loss']}, take profit: {current['take_profit']}, risk reward: {current['risk_reward_ratio']}."
+            f"Answer in short clear English only. Keep it limited to this forex dashboard, signals, chart, risk, stop loss, take profit, confidence, timeframe, pairs, XAU/USD, crypto, and how to use the dashboard. "
+            f"If the question is unrelated, reply with: I can only help with this trading analysis dashboard, its signals, chart, risk, and forex education. "
+            f"Question: {user_question}. Symbol: {current_symbol or 'N/A'}. Current signal: {current['signal']}. Confidence: {float(current.get('confidence', 0.0)) * 100:.1f}%. "
+            f"Always include: {WARNING_TEXT}"
         )
         gemini_answer = _gemini_chat_response(model_prompt)
         if gemini_answer:
-            return gemini_answer
+            return _with_warning(gemini_answer)
 
-    # Extract signal and key info
+    app_scope_words = (
+        "signal", "chart", "candles", "candle", "risk", "stop loss", "take profit", "confidence", "timeframe",
+        "pair", "xau", "xag", "gbp", "eur", "usd", "btc", "crypto", "dashboard", "analyze", "analysis"
+    )
+    if not any(word in question for word in app_scope_words):
+        return "I can only help with this trading analysis dashboard, its signals, chart, risk, and forex education."
+
     signal = current['signal']
-    confidence = current['confidence']
-    market_bias = current['market_bias']
-    trend_1d = current['trend_1d']
-    trend_4h = current['trend_4h']
-    trend_1h = current['trend_1h']
-    trend_15m = current['trend_15m']
-    trend_5m = current['trend_5m']
-    stop_loss = current['stop_loss']
-    take_profit = current['take_profit']
-    risk_reward = current['risk_reward_ratio']
+    confidence = float(current.get('confidence', 0.0)) * 100
 
-    # Simple keyword matching
-    if "what does" in question and "mean" in question:
-        if "hold" in question:
-            return "HOLD means there is no clear setup right now. It is usually safer to wait when the market is uncertain."
-        elif "buy" in question:
-            return "BUY means the analysis shows bullish pressure. It is not a guarantee, so always use proper risk management."
-        elif "sell" in question:
-            return "SELL means the analysis shows bearish pressure. It is not a guarantee, so always use proper risk management."
-        elif "strong buy" in question:
-            return "STRONG BUY means multiple timeframes are aligned bullish. It is stronger than a normal BUY, but still not guaranteed."
-        elif "strong sell" in question:
-            return "STRONG SELL means multiple timeframes are aligned bearish. It is stronger than a normal SELL, but still not guaranteed."
-        elif "wait" in question:
-            return "WAIT signals mean the market is not ready for a clear trade yet. It is better to wait for confirmation."
-
-    if "why" in question and ("risk" in question or "stop" in question or "empty" in question):
-        if signal == "HOLD":
-            return "Risk values only appear when a trade signal is active. On HOLD, the system avoids trades because the market is unclear."
-        elif "wait" in signal:
-            return "WAIT signals mean the system is waiting for a clearer setup before calculating risk and targets."
-        else:
-            return f"Risk is based on market volatility. The stop loss protects the trade, and the take profit aims for a healthy risk/reward ratio of about {risk_reward or 'N/A'}."
-
-    if "what is" in question:
-        if "xau" in question or "gold" in question:
-            return "XAU/USD is the gold price expressed in US dollars. It is a commodity pair and often moves opposite USD strength."
-        elif "xag" in question or "silver" in question:
-            return "XAG/USD is the silver price expressed in US dollars. Silver can be more volatile than gold and is influenced by industrial demand."
-        elif "timeframe" in question:
-            return "A timeframe shows how long each candle lasts. For example, 5m means 5 minutes and 1h means 1 hour. Lower timeframes show short-term moves, higher timeframes show the bigger trend."
-        elif "confidence" in question:
-            return f"Confidence shows how strong the signal looks. Current confidence is {confidence * 100:.1f}%. Higher is better, but it is not a guarantee."
-        elif "spread" in question:
-            return "Spread is the difference between buy and sell prices. It is the trading cost you pay when opening a position."
-        elif "atr" in question:
-            return "ATR measures average market movement. Traders use it to set stop loss and take profit levels based on volatility."
-
-    if "should i" in question or "can i" in question or "trade now" in question:
-        return "I cannot provide personal trading advice. This tool is for learning. Always manage your risk and only trade what you can afford to lose."
-
-    if "real" in question and "time" in question:
-        return "This is near-real-time analysis using recent market data, but it is not a prediction and not guaranteed."
-
-    if "explain" in question and "signal" in question:
-        explanation = f"Current signal: {signal}. "
-        if signal == "HOLD":
-            explanation += "The market does not have a clear trade setup right now, so the system is avoiding trades."
-        elif signal == "BUY":
-            explanation += "The analysis shows bullish pressure. Use a stop loss and manage your risk."
-        elif signal == "STRONG BUY":
-            explanation += f"Multiple timeframes are aligned bullish. Confidence is {confidence * 100:.1f}%. Treat this as informed analysis, not a promise."
-        elif signal == "SELL":
-            explanation += "The analysis shows bearish pressure. Use a stop loss and manage your risk."
-        elif signal == "STRONG SELL":
-            explanation += f"Multiple timeframes are aligned bearish. Confidence is {confidence * 100:.1f}%. Treat this as informed analysis, not a promise."
-        elif "WAIT_FOR_BUY" in signal:
-            explanation += "Higher timeframes are bullish, but the 5-minute chart is not yet confirming. Wait for lower timeframe alignment."
-        elif "WAIT_FOR_SELL" in signal:
-            explanation += "Higher timeframes are bearish, but the 5-minute chart is not yet confirming. Wait for lower timeframe alignment."
-        return explanation
-
-    # Default responses
     if signal == "HOLD":
-        return "Current signal is HOLD. No active trade is recommended right now. This is often the safest choice in uncertain markets."
-    elif "BUY" in signal:
-        return f"The system suggests {signal} with {confidence * 100:.1f}% confidence. Remember, this is educational analysis, not financial advice."
-    elif "SELL" in signal:
-        return f"The system suggests {signal} with {confidence * 100:.1f}% confidence. Remember, this is educational analysis, not financial advice."
-    elif "WAIT" in signal:
-        return f"The signal is {signal}, which means the market is not fully confirmed yet. Wait for better confirmation before trading."
+        return _with_warning("The current signal is HOLD. This means there is no clear safe setup right now.")
+    if signal in {"BUY", "STRONG BUY"}:
+        return _with_warning(f"The current signal is {signal} with {confidence:.1f}% confidence. This suggests bullish conditions, but it is not guaranteed. Please confirm with the chart and risk levels.")
+    if signal in {"SELL", "STRONG SELL"}:
+        return _with_warning(f"The current signal is {signal} with {confidence:.1f}% confidence. This suggests bearish conditions, but it is not guaranteed. Please confirm with the chart and risk levels.")
+    if signal == "WAIT_FOR_BUY":
+        return _with_warning(f"The current signal is WAIT_FOR_BUY with {confidence:.1f}% confidence. It means the market has a bullish bias, but the entry is not confirmed yet.")
+    if signal == "WAIT_FOR_SELL":
+        return _with_warning(f"The current signal is WAIT_FOR_SELL with {confidence:.1f}% confidence. It means the market has a bearish bias, but the entry is not confirmed yet.")
 
-    return "I can help explain the current market signal, risk management, or asset basics. Ask me about signal meaning, risk, or XAU/USD."
+    return _with_warning(f"The current signal is {signal} with {confidence:.1f}% confidence. Please confirm it with the chart and risk levels.")
