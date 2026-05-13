@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Clock, Activity, Zap, BarChart3, TrendingUp, TrendingDown } from 'lucide-react'
+import { Clock, Activity, Zap, BarChart3, TrendingUp, TrendingDown, LogOut, UserCircle } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
-function Navbar({ selectedPair, analysisResult, loading }) {
+function Navbar({ selectedPair, analysisResult, loading, loadingStage }) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [priceChange, setPriceChange] = useState(0)
+  const [logoutError, setLogoutError] = useState('')
+  const [logoutLoading, setLogoutLoading] = useState(false)
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -26,7 +30,21 @@ function Navbar({ selectedPair, analysisResult, loading }) {
     'HOLD': 'yellow-400',
   }[signal] || 'gray-400'
 
-  const isLoading = loading && !analysisResult
+  const isSkeletonLoading = loadingStage === 'skeleton' && loading && !analysisResult
+  const displayName = user?.displayName || user?.email || 'Trader'
+
+  const handleLogout = async () => {
+    setLogoutError('')
+    setLogoutLoading(true)
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout failed:', error)
+      setLogoutError('Unable to sign out. Try again.')
+    } finally {
+      setLogoutLoading(false)
+    }
+  }
 
   return (
     <nav className="glass-lg border-b border-gray-700/50 px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 sm:gap-4 backdrop-blur-md">
@@ -56,7 +74,7 @@ function Navbar({ selectedPair, analysisResult, loading }) {
           </div>
 
           {/* Live Price */}
-          {isLoading && (
+          {isSkeletonLoading && (
             <div className="glass nav-card border border-gray-600/50 px-4 py-2 rounded-lg min-w-[160px] sm:min-w-[170px]">
               <div className="skeleton h-3 w-20 mb-2"></div>
               <div className="skeleton h-6 w-28"></div>
@@ -79,7 +97,7 @@ function Navbar({ selectedPair, analysisResult, loading }) {
           )}
 
           {/* Active Session */}
-          {isLoading && (
+          {isSkeletonLoading && (
             <div className="glass nav-card border border-gold/30 px-4 py-2 rounded-lg glow-gold min-w-[150px] sm:min-w-[160px]">
               <div className="skeleton h-3 w-16 mb-2"></div>
               <div className="skeleton h-6 w-32"></div>
@@ -94,7 +112,7 @@ function Navbar({ selectedPair, analysisResult, loading }) {
           )}
 
           {/* Market Bias */}
-          {isLoading && (
+          {isSkeletonLoading && (
             <div className="glass nav-card border px-4 py-2 rounded-lg min-w-[130px] sm:min-w-[140px] border-yellow-400/30">
               <div className="skeleton h-3 w-14 mb-2"></div>
               <div className="skeleton h-6 w-20"></div>
@@ -138,7 +156,34 @@ function Navbar({ selectedPair, analysisResult, loading }) {
             Real-time
           </p>
         </div>
+
+        {user && (
+          <div className="nav-chip glass border border-gray-600/50 px-3 py-1.5 rounded-lg flex items-center gap-2">
+            <UserCircle size={14} className="text-accent" />
+            <span className="text-xs font-semibold text-gray-200">{displayName}</span>
+          </div>
+        )}
+
+        {user && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={logoutLoading}
+            className="nav-chip glass border border-gray-600/50 px-3 py-1.5 rounded-lg flex items-center gap-2 hover:border-bearish/60 transition-smooth"
+          >
+            <LogOut size={14} className="text-bearish" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-bearish">
+              {logoutLoading ? 'Signing out' : 'Logout'}
+            </span>
+          </button>
+        )}
       </div>
+
+      {logoutError && (
+        <div className="text-xs text-bearish font-semibold px-2">
+          {logoutError}
+        </div>
+      )}
     </nav>
   )
 }

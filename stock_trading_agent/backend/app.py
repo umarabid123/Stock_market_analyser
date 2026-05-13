@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
@@ -13,6 +13,7 @@ from config import settings
 from data.market_data import MarketDataProvider
 from strategy.signal_engine import SignalEngine
 from assistant.chatbot import get_chatbot_response
+from auth.firebase_auth import get_current_user
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -109,10 +110,16 @@ async def health_check():
     }
 
 
+@app.get("/api/me")
+async def get_me(user=Depends(get_current_user)):
+    """Return the authenticated user's profile."""
+    return {"user": user}
+
+
 # ============= Market Analysis =============
 
 @app.post("/api/analyze")
-async def analyze_market(request: AnalyzeRequest):
+async def analyze_market(request: AnalyzeRequest, user=Depends(get_current_user)):
     """
     Analyze market for a given symbol.
     
@@ -173,7 +180,12 @@ async def analyze_market(request: AnalyzeRequest):
 # ============= Market Candles =============
 
 @app.get("/api/candles")
-async def get_candles(symbol: str, timeframe: str = "15m", lookback: str = "5d"):
+async def get_candles(
+    symbol: str,
+    timeframe: str = "15m",
+    lookback: str = "5d",
+    user=Depends(get_current_user),
+):
     """
     Get candlestick data for a symbol.
     
@@ -210,7 +222,7 @@ async def get_candles(symbol: str, timeframe: str = "15m", lookback: str = "5d")
 # ============= Chatbot =============
 
 @app.post("/api/chat")
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, user=Depends(get_current_user)):
     """
     Chat endpoint for answering questions about signals and trading.
     """

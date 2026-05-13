@@ -10,6 +10,7 @@ function MainDashboard({
   analysisResult,
   candles,
   loading,
+  loadingStage,
   error,
   selectedPair,
   selectedTimeframe,
@@ -17,6 +18,8 @@ function MainDashboard({
   selectedMarket,
 }) {
   const defaultMarket = selectedMarket || 'Forex'
+  const showInitialLoading = loadingStage === 'initial' && loading && !analysisResult
+  const showSkeleton = loadingStage === 'skeleton' && loading && !analysisResult
   return (
     <div className="flex-1 overflow-auto bg-dark-bg space-y-4 sm:space-y-6 md:space-y-8 p-4 sm:p-6 md:p-8">
       {/* Error Message */}
@@ -30,8 +33,19 @@ function MainDashboard({
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && !analysisResult && (
+      {/* Initial Loading State */}
+      {showInitialLoading && (
+        <div className="glass-lg border border-gray-700/50 p-5 sm:p-6 rounded-lg flex items-center gap-4 fade-in">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-bullish border-t-transparent rounded-full animate-spin" />
+          <div>
+            <p className="text-sm sm:text-base font-semibold text-white">Loading market analysis</p>
+            <p className="text-xs text-gray-400 mt-1">Fetching live data and preparing insights.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Skeleton State */}
+      {showSkeleton && (
         <div className="space-y-4 sm:space-y-6 fade-in">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {Array.from({ length: 4 }).map((_, index) => (

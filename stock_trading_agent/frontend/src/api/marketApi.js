@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { auth } from '../lib/firebase'
 
 // Auto-detect API URL based on environment
 const getAPIBaseURL = () => {
@@ -23,8 +24,22 @@ const client = axios.create({
 })
 
 // Add request interceptor for debugging
-client.interceptors.request.use((config) => {
+client.interceptors.request.use(async (config) => {
   console.log(`📡 API Request: ${config.method?.toUpperCase()} ${config.url}`)
+
+  const user = auth.currentUser
+  if (user) {
+    try {
+      const token = await user.getIdToken()
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      }
+    } catch (error) {
+      console.error('Failed to attach auth token:', error)
+    }
+  }
+
   return config
 })
 

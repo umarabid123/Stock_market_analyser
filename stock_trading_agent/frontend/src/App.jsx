@@ -1,11 +1,18 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import MainDashboard from './components/MainDashboard'
 import Chatbot from './components/Chatbot'
+import ProtectedRoute from './components/ProtectedRoute'
+import AuthRoute from './components/AuthRoute'
+import AuthLoading from './components/AuthLoading'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
 import { analyzeMarket, getCandles } from './api/marketApi'
+import { useAuth } from './context/AuthContext'
 
-function App() {
+const TradingApp = () => {
   const [selectedMarket, setSelectedMarket] = useState('Forex')
   const [selectedPair, setSelectedPair] = useState('GBP/USD')
   const [selectedTimeframe, setSelectedTimeframe] = useState('1m')
@@ -17,6 +24,25 @@ function App() {
   const [candles, setCandles] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [loadingStage, setLoadingStage] = useState('idle')
+
+  useEffect(() => {
+    let skeletonTimer
+    if (loading && !analysisResult) {
+      setLoadingStage('initial')
+      skeletonTimer = setTimeout(() => {
+        setLoadingStage('skeleton')
+      }, 450)
+    } else {
+      setLoadingStage('idle')
+    }
+
+    return () => {
+      if (skeletonTimer) {
+        clearTimeout(skeletonTimer)
+      }
+    }
+  }, [loading, analysisResult])
 
   // Perform market analysis
   const performAnalysis = useCallback(async () => {
@@ -92,6 +118,7 @@ function App() {
           selectedPair={selectedPair}
           analysisResult={analysisResult}
           loading={loading}
+          loadingStage={loadingStage}
         />
 
         {/* Dashboard */}
@@ -99,6 +126,7 @@ function App() {
           analysisResult={analysisResult}
           candles={candles}
           loading={loading}
+          loadingStage={loadingStage}
           error={error}
           selectedPair={selectedPair}
           selectedTimeframe={selectedTimeframe}
@@ -110,6 +138,49 @@ function App() {
       {/* Floating Chatbot */}
       <Chatbot currentResult={analysisResult} />
     </div>
+  )
+}
+
+const AuthRedirect = () => {
+  const { user, authLoading } = useAuth()
+
+  if (authLoading) {
+    return <AuthLoading message="Preparing your session..." />
+  }
+
+  return <Navigate to={user ? '/trading' : '/login'} replace />
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<AuthRedirect />} />
+      <Route
+        path="/login"
+        element={
+          <AuthRoute>
+            <Login />
+          </AuthRoute>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <AuthRoute>
+            <Signup />
+          </AuthRoute>
+        }
+      />
+      <Route
+        path="/trading"
+        element={
+          <ProtectedRoute>
+            <TradingApp />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 
